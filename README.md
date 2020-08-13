@@ -1,6 +1,6 @@
 # slack-utils
 
-## There are files packages in this repo
+## There are several files in this repo
 Message.py
 
 Scanner.py
