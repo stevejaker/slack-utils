@@ -13,34 +13,41 @@ class Message:
     """
     This Message class is customized specifically for a pokemon go slack team
     """
-    def __init__(self, msg, message_type='raid', box=None, logfile='logfile.txt', **args):
+    def __init__(self, msg, message_type='raid', box=None, logfile='logfile.txt', **kwargs):
         # The idk_url is a fallback for for image urls that are unknown by my source, 
         # requiring me to manually extract them
         # Pending
-        self.idk_url = "https://s3-us-west-2.amazonaws.com/slack-files2/bot_icons/2019-04-07/602962075476_48.png"
-        self.emoji_list      = [':crescent_moon:',':question:',":heavy_check_mark:",":sunny:",":cloud:",":rain_cloud:",":snow_cloud:"]
-        self.ts              = msg['ts']
-        self.username        = msg['username']
-        self.icon_url        = msg['icons']['image_48']
-        self.title_link      = msg['attachments'][0]['title_link']
-        self.color           = msg['attachments'][0]['color']
-
-        # self.id              = str(uuid.uuid4()) # To be used eventually
-        # self.callback_id     = msg['attachments'][0]['callback_id']
-        # self.text            = msg['attachments'][0]['text']
-        # self.title           = msg['attachments'][0]['title']
-        
-        self.lat, self.lon = self.getLatLon(self.title_link)
-        self.logfile = logfile
-        self.box = box 
-
-        self.maps_zoom = 14
-        self.maps_size = 200
-
-        if message_type == 'mon':
-            self.attachment = self.setup_wild_mon(msg)
+        if 'bot_id' and 'subtype' and 'attachments' not in msg:
+        	self.invalid = True
         else:
-            self.attachment = self.setup_raid_boss(msg)
+        	self.invalid = False
+        	self.as_user = False
+        	self.text = None
+        	self.thread_ts = None
+	        self.idk_url = "https://s3-us-west-2.amazonaws.com/slack-files2/bot_icons/2019-04-07/602962075476_48.png"
+	        self.emoji_list      = [':crescent_moon:',':question:',":heavy_check_mark:",":sunny:",":cloud:",":rain_cloud:",":snow_cloud:"]
+	        self.ts              = msg['ts']
+	        self.username        = msg['username']
+	        self.icon_url        = msg['icons']['image_48']
+	        self.title_link      = msg['attachments'][0]['title_link']
+	        self.color           = msg['attachments'][0]['color']
+
+	        # self.id              = str(uuid.uuid4()) # To be used eventually
+	        # self.callback_id     = msg['attachments'][0]['callback_id']
+	        # self.text            = msg['attachments'][0]['text']
+	        # self.title           = msg['attachments'][0]['title']
+	        
+	        self.lat, self.lon = self.getLatLon(self.title_link)
+	        self.logfile = logfile
+	        self.box = box 
+
+	        self.maps_zoom = 14
+	        self.maps_size = 200
+
+	        if message_type == 'mon':
+	            self.attachment = self.setup_wild_mon(msg)
+	        else:
+	            self.attachment = self.setup_raid_boss(msg)
 
 
     def setup_wild_mon(self, msg):
@@ -116,7 +123,7 @@ class Message:
         """
         
         # Do something here with max/min lat/lon
-        if self.box is None or not self.is_in_box(self.box) or self.DO_NOT_POST():
+        if self.invalid or self.box is None or not self.is_in_box(self.box) or self.DO_NOT_POST():
             return False
 
         if logger_type == 'sql':
